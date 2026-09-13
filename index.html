@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>句型大考驗 - 一……就……</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+        }
+
+        body {
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            width: 100%;
+            max-width: 700px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            text-align: center;
+        }
+
+        .category-tag {
+            display: inline-block;
+            background-color: #4A90E2;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 100%;
+            background-color: #ff9f43;
+            transition: width 1s linear;
+        }
+
+        .card {
+            background: #fdfbf7;
+            border: 3px solid #e0d5c1;
+            border-radius: 15px;
+            padding: 40px 20px;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .sentence-part {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            line-height: 1.6;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .first-part {
+            color: #2c3e50;
+        }
+
+        .second-part {
+            color: #e74c3c;
+            margin-top: 15px;
+            opacity: 0;
+        }
+
+        .second-part.show {
+            opacity: 1;
+        }
+
+        .timer-text {
+            font-size: 1rem;
+            color: #7f8c8d;
+            margin-top: 10px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            background-color: #27ae60;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.btn-reveal {
+            background-color: #f39c12;
+        }
+
+        button.btn-reveal:hover {
+            background-color: #d35400;
+        }
+
+        .score-board {
+            margin-top: 15px;
+            font-size: 0.95rem;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div id="category" class="category-tag">日常作息與生活習慣</div>
+    
+    <div class="progress-bar-container">
+        <div id="progress" class="progress-bar"></div>
+    </div>
+
+    <div class="card">
+        <div id="first-part" class="sentence-part first-part">載入中...</div>
+        <div id="second-part" class="sentence-part second-part">--</div>
+    </div>
+
+    <div class="controls">
+        <button id="reveal-btn" class="btn-reveal" onclick="revealAnswerImmediately()">提前顯示答案</button>
+        <button id="next-btn" onclick="nextQuestion()">下一題</button>
+    </div>
+
+    <div class="score-board">
+        題目進度：<span id="current-index">1</span> / <span id="total-index">40</span>
+    </div>
+</div>
+
+<script>
+    // 句子資料庫
+    const sentences = [
+        // 日常作息與生活習慣
+        { cat: "日常作息與生活習慣", p1: "我一回到家，", p2: "就換上舒適的家居服。" },
+        { cat: "日常作息與生活習慣", p1: "弟弟一放學，", p2: "就跑去公園玩耍。" },
+        { cat: "日常作息與生活習慣", p1: "爸爸一起床，", p2: "就邊喝咖啡邊看報紙。" },
+        { cat: "日常作息與生活習慣", p1: "媽媽一買完菜，", p2: "就回廚房準備午餐。" },
+        { cat: "日常作息與生活習慣", p1: "我一寫完作業，", p2: "就去幫媽媽收拾桌子。" },
+        { cat: "日常作息與生活習慣", p1: "小明一聽到鬧鐘聲，", p2: "就立刻從床上爬起來。" },
+        { cat: "日常作息與生活習慣", p1: "妹妹一吃完飯，", p2: "就主動去刷牙。" },
+        { cat: "日常作息與生活習慣", p1: "我一躺在舒服的大床上，", p2: "就很快睡着了。" },
+        { cat: "日常作息與生活習慣", p1: "爺爺一吃過晚飯，", p2: "就去附近的公園散步。" },
+        { cat: "日常作息與生活習慣", p1: "我們一到達目的地，", p2: "就連忙拍照片留念。" },
+
+        // 學校生活與學習
+        { cat: "學校生活與學習", p1: "上課鐘聲一響，", p2: "同學們就迅速回到座位上。" },
+        { cat: "學校生活與學習", p1: "老師一走進教室，", p2: "大家就安靜了下來。" },
+        { cat: "學校生活與學習", p1: "我一遇到不會寫的字，", p2: "就會查字典。" },
+        { cat: "學校生活與學習", p1: "他一有不懂的數學題，", p2: "就會主動請教老師。" },
+        { cat: "學校生活與學習", p1: "同學們一看到體育老師，", p2: "就高興地歡呼起來。" },
+        { cat: "學校生活與學習", p1: "下課鈴聲一響，", p2: "走廊裏就熱鬧起來了。" },
+        { cat: "學校生活與學習", p1: "小華一拿到滿分的考卷，", p2: "就迫不及待想告訴媽媽。" },
+        { cat: "學校生活與學習", p1: "我們一完成分組討論，", p2: "就派代表上台報告。" },
+        { cat: "學校生活與學習", p1: "我一打開書包，", p2: "就發現自己忘記帶視藝用品。" },
+        { cat: "學校生活與學習", p1: "校長一站上講台，", p2: "全場師生就肅立致敬。" },
+
+        // 自然現象與天氣變化
+        { cat: "自然現象與天氣變化", p1: "太陽一出來，", p2: "濃濃的霧氣就漸漸散去了。" },
+        { cat: "自然現象與天氣變化", p1: "一到了春天，", p2: "花園裏的鮮花就爭相盛開。" },
+        { cat: "自然現象與天氣變化", p1: "天色一暗下來，", p2: "路燈就陸陸續續亮了起來。" },
+        { cat: "自然現象與天氣變化", p1: "一下起大雨，", p2: "街上的行人就紛紛撐起傘來。" },
+        { cat: "自然現象與天氣變化", p1: "風一吹過，", p2: "樹葉就像蝴蝶一樣飄落下來。" },
+        { cat: "自然現象與天氣變化", p1: "一到了冬天，", p2: "山頂就蓋上了厚厚的一層白雪。" },
+        { cat: "自然現象與天氣變化", p1: "烏雲一密佈，", p2: "天空就隨之暗了下來。" },
+        { cat: "自然現象與天氣變化", p1: "閃電一劃過天空，", p2: "隨後就傳來轟隆隆的雷聲。" },
+        { cat: "自然現象與天氣變化", p1: "秋風一起，", p2: "天氣就變得非常涼爽。" },
+        { cat: "自然現象與天氣變化", p1: "彩虹一出現，", p2: "大家就紛紛拿起手機拍照。" },
+
+        // 情緒感受與反應
+        { cat: "情緒感受與反應", p1: "小狗一看到主人回來，", p2: "就不停地搖尾巴。" },
+        { cat: "情緒感受與反應", p1: "弟弟一摔倒，", p2: "就大聲地哭起來。" },
+        { cat: "情緒感受與反應", p1: "妹妹一聽到動聽的音樂，", p2: "就跟着拍子跳起舞來。" },
+        { cat: "情緒感受與反應", p1: "他一听到這個好消息，", p2: "就高興得跳了起來。" },
+        { cat: "情緒感受與反應", p1: "我一走進鬼屋，", p2: "就嚇得閉上了眼睛。" },
+        { cat: "情緒感受與反應", p1: "媽媽一看見滿地垃圾，", p2: "就皺起了眉頭。" },
+        { cat: "情緒感受與反應", p1: "警報器一響，", p2: "消防員就立刻出發去救火。" },
+        { cat: "情緒感受與反應", p1: "裁判一吹響哨子，", p2: "運動員們就奮力向前衝。" },
+        { cat: "情緒感受與反應", p1: "我一想到明天的遠足，", p2: "就興奮得睡不着覺。" },
+        { cat: "情緒感受與反應", p1: "嬰兒一喝到母乳，", p2: "就停止了哭泣。" }
+    ];
+
+    let currentIndex = 0;
+    let timer = null;
+    let countdownInterval = null;
+    const WAIT_SECONDS = 10; // 等待秒數設定
+
+    // DOM 元素
+    const categoryEl = document.getElementById('category');
+    const firstPartEl = document.getElementById('first-part');
+    const secondPartEl = document.getElementById('second-part');
+    const progressBar = document.getElementById('progress');
+    const currentIndexEl = document.getElementById('current-index');
+    const totalIndexEl = document.getElementById('total-index');
+
+    totalIndexEl.textContent = sentences.length;
+
+    function loadQuestion(index) {
+        // 清除舊計時器
+        clearTimeout(timer);
+        clearInterval(countdownInterval);
+
+        // 載入當前題目內容
+        const data = sentences[index];
+        categoryEl.textContent = data.cat;
+        firstPartEl.textContent = data.p1;
+        secondPartEl.textContent = data.p2;
+        secondPartEl.classList.remove('show'); // 隱藏後半句
+        
+        currentIndexEl.textContent = index + 1;
+
+        // 重置並啟動倒數進度條
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '100%';
+        
+        // 觸發重繪後啟動動畫
+        setTimeout(() => {
+            progressBar.style.transition = `width ${WAIT_SECONDS}s linear`;
+            progressBar.style.width = '0%';
+        }, 50);
+
+        // 設定 10 秒後顯示答案
+        timer = setTimeout(() => {
+            showSecondPart();
+        }, WAIT_SECONDS * 1000);
+    }
+
+    function showSecondPart() {
+        secondPartEl.classList.add('show');
+        progressBar.style.transition = 'none';
+        progressBar.style.width = '0%';
+    }
+
+    function revealAnswerImmediately() {
+        clearTimeout(timer);
+        showSecondPart();
+    }
+
+    function nextQuestion() {
+        currentIndex = (currentIndex + 1) % sentences.length;
+        loadQuestion(currentIndex);
+    }
+
+    // 初始化第一題
+    loadQuestion(0);
+</script>
+
+</body>
+</html>
